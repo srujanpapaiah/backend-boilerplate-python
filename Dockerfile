@@ -3,7 +3,7 @@
 # ============================================================================
 
 # ── Stage 1: Build ──────────────────────────────────────────────────────────
-FROM python:3.12-slim AS builder
+FROM python:3.14-slim AS builder
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
@@ -22,7 +22,7 @@ COPY alembic/ alembic/
 COPY alembic.ini ./
 
 # ── Stage 2: Production ────────────────────────────────────────────────────
-FROM python:3.12-slim AS production
+FROM python:3.14-slim AS production
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
