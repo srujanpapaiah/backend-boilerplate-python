@@ -7,10 +7,10 @@ from __future__ import annotations
 
 import time
 import uuid
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import structlog
-from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 
 if TYPE_CHECKING:
     from starlette.requests import Request
@@ -32,12 +32,12 @@ SECURITY_HEADERS: dict[bytes, bytes] = {
 class RequestIdMiddleware(BaseHTTPMiddleware):
     """Inject a unique request ID into every request/response cycle."""
 
-    async def dispatch(self, request: Request, call_next: object) -> Response:  # type: ignore[override]
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         request_id = request.headers.get("X-Request-ID", str(uuid.uuid4()))
         structlog.contextvars.clear_contextvars()
         structlog.contextvars.bind_contextvars(request_id=request_id)
 
-        response: Response = await call_next(request)  # type: ignore[call-arg]
+        response = await call_next(request)
         response.headers["X-Request-ID"] = request_id
         return response
 
@@ -45,9 +45,9 @@ class RequestIdMiddleware(BaseHTTPMiddleware):
 class ProcessTimeMiddleware(BaseHTTPMiddleware):
     """Add X-Process-Time header to every response."""
 
-    async def dispatch(self, request: Request, call_next: object) -> Response:  # type: ignore[override]
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         start = time.perf_counter()
-        response: Response = await call_next(request)  # type: ignore[call-arg]
+        response = await call_next(request)
         process_time = time.perf_counter() - start
         response.headers["X-Process-Time"] = f"{process_time:.4f}"
         return response
@@ -64,7 +64,7 @@ class SecurityHeadersMiddleware:
             await self.app(scope, receive, send)
             return
 
-        async def send_with_headers(message: dict) -> None:  # type: ignore[type-arg]
+        async def send_with_headers(message: Any) -> None:
             if message["type"] == "http.response.start":
                 response_headers: list[tuple[bytes, bytes]] = list(message.get("headers", []))
                 existing_names = {h[0].lower() for h in response_headers}

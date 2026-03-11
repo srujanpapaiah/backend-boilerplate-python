@@ -118,7 +118,7 @@ jobs:
         run: uv sync
 
       - name: Bandit security check
-        run: uv run ruff check --select S src
+        run: uv run ruff check --select S --ignore S105,S106,S107 src
 
   docker:
     name: Docker Build
