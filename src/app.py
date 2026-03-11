@@ -16,7 +16,7 @@ from src.config import get_settings
 from src.core.exceptions import register_exception_handlers
 from src.core.logging import setup_logging
 from src.core.middleware import ProcessTimeMiddleware, RequestIdMiddleware, SecurityHeadersMiddleware
-from src.db.session import engine
+from src.db.session import dispose_engine
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator
@@ -33,7 +33,7 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     log = get_logger("lifespan")
     log.info("startup", environment=settings.environment, debug=settings.debug)
     yield
-    await engine.dispose()
+    await dispose_engine()
     log.info("shutdown")
 
 

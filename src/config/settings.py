@@ -9,11 +9,13 @@ from __future__ import annotations
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import Field
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
+    """Typed, validated application settings loaded from the environment."""
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
@@ -67,6 +69,13 @@ class Settings(BaseSettings):
     otel_exporter_otlp_endpoint: str | None = None
     otel_service_name: str = "fastapi-boilerplate"
 
+    @model_validator(mode="after")
+    def _validate_production_secrets(self) -> Settings:
+        if self.environment == "production" and self.secret_key == "change-me-in-production":
+            msg = "SECRET_KEY must be set to a strong random value in production (use: openssl rand -hex 32)"
+            raise ValueError(msg)
+        return self
+
     @property
     def is_development(self) -> bool:
         return self.environment == "development"
@@ -82,4 +91,5 @@ class Settings(BaseSettings):
 
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:
+    """Return cached application settings singleton."""
     return Settings()

@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-echo "Running database migrations..."
-uv run alembic upgrade head
+if [ "${RUN_MIGRATIONS:-true}" = "true" ]; then
+    echo "Running database migrations..."
+    uv run alembic upgrade head
+fi
 
 echo "Starting application..."
 exec uv run gunicorn src.main:app \

@@ -19,6 +19,15 @@ if TYPE_CHECKING:
 
 logger = structlog.get_logger(__name__)
 
+SECURITY_HEADERS: dict[bytes, bytes] = {
+    b"x-content-type-options": b"nosniff",
+    b"x-frame-options": b"DENY",
+    b"x-xss-protection": b"1; mode=block",
+    b"strict-transport-security": b"max-age=31536000; includeSubDomains",
+    b"referrer-policy": b"strict-origin-when-cross-origin",
+    b"permissions-policy": b"camera=(), microphone=(), geolocation=()",
+}
+
 
 class RequestIdMiddleware(BaseHTTPMiddleware):
     """Inject a unique request ID into every request/response cycle."""
@@ -45,7 +54,7 @@ class ProcessTimeMiddleware(BaseHTTPMiddleware):
 
 
 class SecurityHeadersMiddleware:
-    """Add standard security headers to all responses."""
+    """Add standard security headers to all responses (without duplicating)."""
 
     def __init__(self, app: ASGIApp) -> None:
         self.app = app
@@ -57,18 +66,11 @@ class SecurityHeadersMiddleware:
 
         async def send_with_headers(message: dict) -> None:  # type: ignore[type-arg]
             if message["type"] == "http.response.start":
-                dict(scope.get("headers", []))
                 response_headers: list[tuple[bytes, bytes]] = list(message.get("headers", []))
-                response_headers.extend(
-                    [
-                        (b"x-content-type-options", b"nosniff"),
-                        (b"x-frame-options", b"DENY"),
-                        (b"x-xss-protection", b"1; mode=block"),
-                        (b"strict-transport-security", b"max-age=31536000; includeSubDomains"),
-                        (b"referrer-policy", b"strict-origin-when-cross-origin"),
-                        (b"permissions-policy", b"camera=(), microphone=(), geolocation=()"),
-                    ]
-                )
+                existing_names = {h[0].lower() for h in response_headers}
+                for name, value in SECURITY_HEADERS.items():
+                    if name not in existing_names:
+                        response_headers.append((name, value))
                 message["headers"] = response_headers
             await send(message)
 

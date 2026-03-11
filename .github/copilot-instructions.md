@@ -14,7 +14,7 @@ Tech stack: Python 3.12+, FastAPI, SQLAlchemy 2.x async, Pydantic v2, PostgreSQL
 - Use Pydantic v2 `model_validate()` and `model_dump()` methods
 - Raise domain exceptions from `src/core/exceptions.py`
 - Write docstrings for public classes and complex functions
-- Use `Annotated[X, Depends()]` for FastAPI dependency injection
+- Use `Annotated[X, Depends(get_x)]` for FastAPI dependency injection; define type aliases like `DbSession = Annotated[AsyncSession, Depends(get_db_session)]`
 
 ### Never
 - Use `print()` — use `structlog.get_logger()`

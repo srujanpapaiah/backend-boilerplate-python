@@ -53,7 +53,8 @@ test-integration: ## Run integration tests only
 	$(UV) run pytest -m integration
 
 test-cov: ## Run tests with coverage report
-	$(UV) run pytest --cov-report=html && open htmlcov/index.html
+	$(UV) run pytest --cov-report=html
+	@echo "Coverage report generated at htmlcov/index.html"
 
 test-fast: ## Run tests in parallel
 	$(UV) run pytest -n auto

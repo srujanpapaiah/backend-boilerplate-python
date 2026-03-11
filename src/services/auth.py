@@ -13,6 +13,8 @@ if TYPE_CHECKING:
 
 
 class TokenPair:
+    """Value object holding an access/refresh token pair."""
+
     __slots__ = ("access_token", "refresh_token", "token_type")
 
     def __init__(self, access_token: str, refresh_token: str) -> None:
@@ -22,10 +24,13 @@ class TokenPair:
 
 
 class AuthService:
+    """Handles login, token refresh, and credential verification."""
+
     def __init__(self, session: AsyncSession) -> None:
         self.user_service = UserService(session)
 
     async def login(self, email: str, password: str) -> TokenPair:
+        """Authenticate a user by email/password and return a token pair."""
         user = await self.user_service.get_user_by_email(email)
         if user is None or not verify_password(password, user.hashed_password):
             raise UnauthorizedError(message="Invalid email or password")
@@ -37,10 +42,13 @@ class AuthService:
         )
 
     async def refresh(self, refresh_token: str) -> TokenPair:
+        """Exchange a valid refresh token for a new token pair."""
         payload = decode_token(refresh_token)
         if payload.get("type") != "refresh":
             raise UnauthorizedError(message="Invalid token type")
-        user_id = payload["sub"]
+        user_id = payload.get("sub")
+        if user_id is None:
+            raise UnauthorizedError(message="Invalid token payload")
         user = await self.user_service.get_user(int(user_id))
         if not user.is_active:
             raise UnauthorizedError(message="Account is disabled")

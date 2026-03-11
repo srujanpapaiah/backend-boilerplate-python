@@ -35,10 +35,13 @@ coverage.xml
 *.cover
 .pytest_cache/
 .mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
 
 # Database
 *.db
 *.sqlite3
+dump.rdb
 
 # Docker
 docker-compose.override.yml

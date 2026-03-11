@@ -14,7 +14,7 @@ WORKDIR /app
 
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
-COPY pyproject.toml ./
+COPY pyproject.toml uv.lock ./
 RUN uv sync --no-dev --frozen 2>/dev/null || uv sync --no-dev
 
 COPY src/ src/
@@ -32,6 +32,7 @@ RUN groupadd -r appuser && useradd -r -g appuser -d /app -s /sbin/nologin appuse
 
 WORKDIR /app
 
+COPY --from=builder /usr/local/bin/uv /usr/local/bin/uv
 COPY --from=builder /app /app
 
 RUN chown -R appuser:appuser /app
